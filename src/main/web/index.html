@@ -359,9 +359,17 @@
         class DatabaseSimulator {
             constructor() {
                 this.currentDB = 'sql';
+                this.populateSqlData();
                 this.setupSampleData();
                 this.setupEventListeners();
                 this.updateUI();
+            }
+
+            async populateSqlData(){
+                await fetch('http://localhost:8080/api/students')
+                .then(response => {
+                    this.sqlData.students = response.json();
+                });
             }
 
             setupSampleData() {
