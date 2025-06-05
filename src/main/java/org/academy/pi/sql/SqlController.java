@@ -10,10 +10,10 @@ import java.nio.charset.StandardCharsets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.academy.pi.sql.data.RootDataRepo;
-import org.academy.pi.sql.data.StudentDataRepo;
 import org.academy.pi.sql.models.ApiResponse;
-import org.academy.pi.sql.models.QueryResult;
-import org.academy.pi.sql.models.Student;
+import org.academy.pi.sql.models.ApiResponseType;
+import org.academy.pi.sql.models.SqlHealthResult;
+import org.academy.pi.sql.models.SqlQueryResult;
 
 /**
  * REST API Controller for SQL Learning App Provides HTTP endpoints to access H2 database data Runs
@@ -25,14 +25,12 @@ public class SqlController {
 
   private final ObjectMapper objectMapper;
   private final RootDataRepo rootDataRepo;
-  private final StudentDataRepo studentDataRepo;
 
   private HttpServer server;
 
   public SqlController() {
     this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     this.rootDataRepo = new RootDataRepo();
-    this.studentDataRepo = new StudentDataRepo(rootDataRepo);
   }
 
   protected Connection getConnection() throws SQLException {
@@ -44,21 +42,13 @@ public class SqlController {
    */
   public void start() throws IOException {
     server = HttpServer.create(new InetSocketAddress(API_PORT), 0);
-
-    // Setup CORS for all endpoints
-    server.createContext("/", this::handleCors);
-
-    // API endpoints
-    server.createContext("/api/students", this::handleStudents);
+    server.createContext("/", this::handleRoot);
     server.createContext("/api/query", this::handleCustomQuery);
-
     server.setExecutor(null);
     server.start();
 
     System.out.println("🌐 SQL Learning API started on http://localhost:" + API_PORT);
     System.out.println("📋 Available endpoints:");
-    System.out.println("   GET  /api/students - Get all students");
-    System.out.println("   POST /api/students - Add new student");
     System.out.println("   POST /api/query - Execute custom SQL query");
   }
 
@@ -75,36 +65,30 @@ public class SqlController {
   /**
    * Handle CORS preflight requests
    */
-  private void handleCors(HttpExchange exchange) throws IOException {
+  private boolean handleCors(HttpExchange exchange) throws IOException {
     Headers headers = exchange.getResponseHeaders();
     headers.add("Access-Control-Allow-Origin", "*");
     headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    headers.add("Accept", "application/json");
+    headers.add("Content-Type", "application/json");
 
     if ("OPTIONS".equals(exchange.getRequestMethod())) {
       exchange.sendResponseHeaders(200, 0);
       exchange.close();
+      return false; // stop execution
     }
+    return true;
   }
 
-  /**
-   * Handle /api/students endpoints
-   */
-  private void handleStudents(HttpExchange exchange) throws IOException {
-    addCorsHeaders(exchange);
-
+  private void handleRoot(HttpExchange exchange) throws IOException {
+    if (!handleCors(exchange)) {
+      return;
+    }
     try {
       if ("GET".equals(exchange.getRequestMethod())) {
-        List<Student> students = studentDataRepo.getAllStudents();
-        sendJsonResponse(exchange, 200, ApiResponse.success(students));
-      } else if ("POST".equals(exchange.getRequestMethod())) {
-        Student newStudent = readRequestBody(exchange, Student.class);
-        boolean success = studentDataRepo.addStudent(newStudent);
-        if (success) {
-          sendJsonResponse(exchange, 201, ApiResponse.success("Student added successfully"));
-        } else {
-          sendJsonResponse(exchange, 400, ApiResponse.error("Failed to add student"));
-        }
+        SqlHealthResult healthResult = rootDataRepo.health();
+        sendJsonResponse(exchange, 200, ApiResponse.success(ApiResponseType.HEALTH, healthResult));
       } else {
         sendJsonResponseFor405(exchange);
       }
@@ -118,8 +102,9 @@ public class SqlController {
    */
   @SuppressWarnings("unchecked")
   private void handleCustomQuery(HttpExchange exchange) throws IOException {
-    addCorsHeaders(exchange);
-
+    if (!handleCors(exchange)) {
+      return;
+    }
     try {
       if ("POST".equals(exchange.getRequestMethod())) {
         var request = (Map<String, String>) readRequestBody(exchange, Map.class);
@@ -130,22 +115,14 @@ public class SqlController {
           return;
         }
 
-        QueryResult result = rootDataRepo.executeQuery(sql);
-        sendJsonResponse(exchange, 200, ApiResponse.success(result));
+        SqlQueryResult result = rootDataRepo.executeQuery(sql);
+        sendJsonResponse(exchange, 200, ApiResponse.success(ApiResponseType.TABLE, result));
       } else {
         sendJsonResponseFor405(exchange);
       }
     } catch (Exception e) {
       sendJsonResponseFor500(exchange, e);
     }
-  }
-
-  private void addCorsHeaders(HttpExchange exchange) {
-    Headers headers = exchange.getResponseHeaders();
-    headers.add("Access-Control-Allow-Origin", "*");
-    headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    headers.add("Content-Type", "application/json");
   }
 
   private void sendJsonResponseFor405(HttpExchange exchange) throws IOException {

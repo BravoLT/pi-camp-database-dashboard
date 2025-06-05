@@ -8,7 +8,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import org.academy.pi.sql.models.QueryResult;
+import org.academy.pi.sql.models.SqlHealthResult;
+import org.academy.pi.sql.models.SqlQueryResult;
 
 public class RootDataRepo {
 
@@ -16,11 +17,32 @@ public class RootDataRepo {
   private static final String DB_USER = "student";
   private static final String DB_PASSWORD = "learn123";
 
+  private StudentDataRepo studentDataRepo;
+
   public RootDataRepo(){
     initializeDatabase();
+    studentDataRepo = new StudentDataRepo(this);
   }
 
-  public QueryResult executeQuery(String sql) throws SQLException {
+  public SqlHealthResult health() {
+    try(Connection _conn = getConnection()){
+      return SqlHealthResult.builder()
+          .connected(true)
+          .sampleQueries(studentDataRepo.getSampleQueries())
+          .tableNames(studentDataRepo.getTableNames())
+          .build();
+
+    } catch (SQLException e) {
+      e.printStackTrace();
+      return SqlHealthResult.builder()
+          .connected(false)
+          .sampleQueries(List.of())
+          .tableNames(List.of())
+          .build();
+    }
+  }
+
+  public SqlQueryResult executeQuery(String sql) throws SQLException {
     long startTime = System.currentTimeMillis();
 
     try (Connection conn = getConnection();
@@ -48,10 +70,11 @@ public class RootDataRepo {
           }
 
           long executionTime = System.currentTimeMillis() - startTime;
-          return QueryResult.builder()
+          return SqlQueryResult.builder()
               .columns(columns)
               .rows(rows)
-              .executionTimeMs(executionTime)
+              .count(rows.size())
+              .execTimeMs(executionTime)
               .build();
         }
       } else {
@@ -60,10 +83,11 @@ public class RootDataRepo {
 
         List<String> columns = List.of("rows_affected");
         List<List<Object>> rows = List.of(List.of(rowsAffected));
-        return QueryResult.builder()
+        return SqlQueryResult.builder()
+            .count(rowsAffected)
             .columns(columns)
             .rows(rows)
-            .executionTimeMs(executionTime)
+            .execTimeMs(executionTime)
             .build();
       }
     }

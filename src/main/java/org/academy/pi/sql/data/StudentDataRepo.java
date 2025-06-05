@@ -1,13 +1,10 @@
 package org.academy.pi.sql.data;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
-import org.academy.pi.sql.models.Student;
+import org.academy.pi.sql.models.SqlNamedQuery;
 
 public class StudentDataRepo {
 
@@ -33,15 +30,38 @@ public class StudentDataRepo {
         ('Henry Davis', 15, 10)
       """;
 
-  private static final String SELECT_ALL = """
-      SELECT
-        id, name, age, grade, updated_date
-      FROM students ORDER BY name
-      """;
-
-  private static final String INSERT_ONE = """
-      INSERT INTO students (name, age, grade) VALUES (?, ?, ?)
-      """;
+  private static final List<SqlNamedQuery> SAMPLE_QUERIES = List.of(
+      SqlNamedQuery.builder()
+          .title("Find All Students")
+          .query("SELECT * FROM students;")
+          .build(),
+      SqlNamedQuery.builder()
+          .title("Find Students by Grade")
+          .query("SELECT name, age FROM students WHERE grade = 7;")
+          .build(),
+      SqlNamedQuery.builder()
+          .title("Count Students")
+          .query("SELECT COUNT(*) as total_students FROM students;")
+          .build(),
+      SqlNamedQuery.builder()
+          .title("Order Students by Age")
+          .query("SELECT * FROM students ORDER BY age DESC;")
+          .build(),
+      SqlNamedQuery.builder()
+          .title("Insert 1")
+          .query("INSERT INTO students (name, age, grade) VALUES (?, ?, ?);")
+          .build(),
+      SqlNamedQuery.builder()
+          .title("Insert 2")
+          .query("""
+          INSERT INTO students
+            (name, age, grade)
+          VALUES
+            (?, ?, ?),
+            (?, ?, ?);
+          """)
+          .build()
+  );
 
   private final RootDataRepo rootDataRepo;
 
@@ -50,38 +70,12 @@ public class StudentDataRepo {
     initializeTable();
   }
 
-  public List<Student> getAllStudents() throws SQLException {
-    List<Student> students = new ArrayList<>();
-
-    try (Connection conn = rootDataRepo.getConnection();
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(SELECT_ALL)) {
-
-      while (rs.next()) {
-        students.add(
-            Student.builder()
-                .id(rs.getInt("id"))
-                .name(rs.getString("name"))
-                .age(rs.getInt("age"))
-                .grade(rs.getInt("grade"))
-                .updatedDate(rs.getDate("updated_date").toLocalDate())
-                .build()
-        );
-      }
-    }
-    return students;
+  public List<String> getTableNames() {
+    return List.of("students");
   }
 
-  public boolean addStudent(Student student) throws SQLException {
-    try (Connection conn = rootDataRepo.getConnection();
-        PreparedStatement pstmt = conn.prepareStatement(INSERT_ONE)) {
-
-      pstmt.setString(1, student.getName());
-      pstmt.setInt(2, student.getAge());
-      pstmt.setInt(3, student.getGrade());
-
-      return pstmt.executeUpdate() > 0;
-    }
+  public List<SqlNamedQuery> getSampleQueries() {
+    return SAMPLE_QUERIES;
   }
 
   private void initializeTable() {

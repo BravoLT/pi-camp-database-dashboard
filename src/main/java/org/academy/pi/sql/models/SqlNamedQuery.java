@@ -10,10 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 @NoArgsConstructor
-public class QueryResult {
+public class SqlNamedQuery {
 
-  private List<String> columns;
-  private List<List<Object>> rows;
-  private int totalRows;
-  private long executionTimeMs;
+  private String title;
+  private String query;
 }
