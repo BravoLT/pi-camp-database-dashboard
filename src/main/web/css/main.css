@@ -78,8 +78,15 @@ body {
   resize: vertical;
 }
 
-.execute-btn {
+#execute-btn {
   background: linear-gradient(45deg, #8b5cf6, #7c3aed);
+}
+
+#db-btn {
+  background: linear-gradient(45deg, #ec4899, #be185d);
+}
+
+.fancy-btn {
   color: white;
   border: none;
   padding: 12px 24px;
@@ -89,7 +96,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.execute-btn:hover {
+.fancy-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
 }

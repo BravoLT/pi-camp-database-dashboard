@@ -43,11 +43,17 @@ class DbManager {
       this.executeQuery();
     });
 
+    // Execute database button
+    document.getElementById('db-btn').addEventListener('click', () => {
+      window.open('http://localhost:8082', '_blank');
+    });
+
     // Sample query clicks
     document.addEventListener('click', (e) => {
-      if (e.target.closest('.sample-query')) {
-        const query = e.target.closest('.sample-query').dataset.query;
-        document.getElementById('query-input').value = query;
+      const closestQuery = e.target.closest('.sample-query');
+      if (closestQuery) {
+        document.getElementById('query-input').value =
+            closestQuery.dataset.query;
       }
     });
   }
