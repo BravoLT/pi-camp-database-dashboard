@@ -19,12 +19,37 @@ public class StudentDataRepo {
           .query("SELECT name, age FROM students WHERE grade = 7;")
           .build(),
       SqlNamedQuery.builder()
+          .title("Find Unique Students by Grade")
+          .query("SELECT DISTINCT name, age FROM students WHERE grade = 7;")
+          .build(),
+      SqlNamedQuery.builder()
           .title("Count Students")
           .query("SELECT COUNT(*) as total_students FROM students;")
           .build(),
       SqlNamedQuery.builder()
+          .title("Group Students by Grade")
+          .query("""
+          SELECT
+            grade, COUNT(*) as grade_students
+          FROM students
+          GROUP BY grade
+          ORDER BY grade;
+          """)
+          .build(),
+      SqlNamedQuery.builder()
           .title("Order Students by Age")
           .query("SELECT * FROM students ORDER BY age DESC;")
+          .build(),
+      SqlNamedQuery.builder()
+          .title("Join Favorites")
+          .query("""
+           SELECT
+            s.name, s.age, s.grade,
+            f.fav_key, f.fav_val
+           FROM students s
+           JOIN favorites f ON s.id = f.student_id
+           WHERE s.id = 1;
+           """)
           .build(),
       SqlNamedQuery.builder()
           .title("Insert 1")
@@ -50,7 +75,7 @@ public class StudentDataRepo {
   }
 
   public List<String> getTableNames() {
-    return List.of("students");
+    return List.of("favorites", "students");
   }
 
   public List<SqlNamedQuery> getSampleQueries() {
@@ -61,13 +86,20 @@ public class StudentDataRepo {
     try (Connection conn = rootDataRepo.getConnection();
         Statement stmt = conn.createStatement()) {
 
+      stmt.execute("DROP TABLE IF EXISTS favorites");
       stmt.execute("DROP TABLE IF EXISTS students");
 
-      String createTableSQL = rootDataRepo.loadSqlFromFile("/sql/students-create.sql");
-      stmt.execute(createTableSQL);
+      String createTable1SQL = rootDataRepo.loadSqlFromFile("/sql/students-create.sql");
+      stmt.execute(createTable1SQL);
 
-      String insertRecordsSQL = rootDataRepo.loadSqlFromFile("/sql/students-data.sql");
-      stmt.execute(insertRecordsSQL);
+      String createTable2SQL = rootDataRepo.loadSqlFromFile("/sql/favorites-create.sql");
+      stmt.execute(createTable2SQL);
+
+      String insertRecords1SQL = rootDataRepo.loadSqlFromFile("/sql/students-data.sql");
+      stmt.execute(insertRecords1SQL);
+
+      String insertRecords2SQL = rootDataRepo.loadSqlFromFile("/sql/favorites-data.sql");
+      stmt.execute(insertRecords2SQL);
 
       System.out.println("✓ Student table created successfully!");
     } catch (IOException | SQLException e) {
