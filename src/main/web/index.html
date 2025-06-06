@@ -4,36 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/main.css"/>
-  <title>Database Learning Dashboard</title>
+  <title>SQL Learning Dashboard</title>
 </head>
 <body>
 <div class="header">
-  <h1>🗄️ Database Learning Dashboard</h1>
-  <p>Explore SQL, NoSQL, and Caching - Built for Young Coders</p>
+  <h1>🗄️ SQL Learning Dashboard</h1>
+  <p>Explore SQL - Built for Young Coders</p>
 </div>
 
 <div class="container">
   <div class="sidebar">
-    <div class="db-selector">
-      <button class="db-tab sql active" data-db="sql">SQL Database</button>
-      <button class="db-tab nosql" data-db="nosql">NoSQL Store</button>
-      <button class="db-tab cache" data-db="cache">Cache System</button>
-    </div>
-
     <div class="query-section">
       <h3>
         <span class="status-indicator"></span>
         <span id="current-db-title">SQL Query Builder</span>
       </h3>
-      <textarea id="query-input" class="query-input" placeholder="Enter your SQL query here...">SELECT * FROM students;</textarea>
+      <textarea id="query-input" class="query-input"></textarea>
       <button id="execute-btn" class="execute-btn">🚀 Execute Query</button>
     </div>
 
     <div class="sample-queries">
       <h4>📚 Sample Queries</h4>
-      <div id="sample-queries-list">
-        <!-- Sample queries will be populated by JavaScript -->
-      </div>
+      <div id="sample-queries-list"></div>
     </div>
   </div>
 
@@ -46,15 +38,13 @@
       <div class="results-content" id="results-content">
         <p>👋 Welcome! Select a database type and run your first query to see results here.</p>
       </div>
-    </div>
-
-    <div class="data-visualization" id="data-visualization">
-      <h4>📈 Data Visualization</h4>
-      <p>Query results will be visualized here...</p>
+      <div class="data-visualization" id="data-visualization">
+        <h4>📈 Data Visualization</h4>
+        <p>Query results will be visualized here...</p>
+      </div>
     </div>
   </div>
 </div>
-
-<script type="application/javascript" src="js/main.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

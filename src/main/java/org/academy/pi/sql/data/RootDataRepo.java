@@ -1,5 +1,8 @@
 package org.academy.pi.sql.data;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -17,25 +20,25 @@ public class RootDataRepo {
   private static final String DB_USER = "student";
   private static final String DB_PASSWORD = "learn123";
 
-  private StudentDataRepo studentDataRepo;
+  private final StudentDataRepo studentDataRepo;
 
-  public RootDataRepo(){
+  public RootDataRepo() {
     initializeDatabase();
     studentDataRepo = new StudentDataRepo(this);
   }
 
   public SqlHealthResult health() {
-    try(Connection _conn = getConnection()){
+    try (Connection _conn = getConnection()) {
       return SqlHealthResult.builder()
           .connected(true)
+          .message("Green means go!")
           .sampleQueries(studentDataRepo.getSampleQueries())
           .tableNames(studentDataRepo.getTableNames())
           .build();
-
-    } catch (SQLException e) {
-      e.printStackTrace();
+    } catch (Exception e) {
       return SqlHealthResult.builder()
           .connected(false)
+          .message(e.getMessage())
           .sampleQueries(List.of())
           .tableNames(List.of())
           .build();
@@ -64,7 +67,11 @@ public class RootDataRepo {
           while (rs.next()) {
             List<Object> row = new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
-              row.add(rs.getObject(i));
+              if("DATE".equals(metaData.getColumnTypeName(i))){
+                row.add(rs.getDate(i).toLocalDate().toString());
+              } else {
+                row.add(rs.getObject(i));
+              }
             }
             rows.add(row);
           }
@@ -99,6 +106,15 @@ public class RootDataRepo {
       return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
     } catch (ClassNotFoundException e) {
       throw new SQLException("H2 Driver not found", e);
+    }
+  }
+
+  protected String loadSqlFromFile(String resourcePath) throws IOException {
+    try (InputStream inputStream = getClass().getResourceAsStream(resourcePath)) {
+      if (inputStream == null) {
+        throw new IOException("Resource not found: " + resourcePath);
+      }
+      return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
     }
   }
 

@@ -1,5 +1,6 @@
 package org.academy.pi.sql.data;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -7,28 +8,6 @@ import java.util.List;
 import org.academy.pi.sql.models.SqlNamedQuery;
 
 public class StudentDataRepo {
-
-  private static final String CREATE_TABLE = """
-      CREATE TABLE students (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(100) NOT NULL,
-        age INT NOT NULL,
-        grade INT NOT NULL,
-        updated_date DATE DEFAULT CURRENT_DATE
-      )
-      """;
-
-  private static final String INSERT_INITIAL_DATA = """
-      INSERT INTO students (name, age, grade) VALUES
-        ('Alice Johnson', 13, 8),
-        ('Bob Smith', 15, 10),
-        ('Charlie Brown', 12, 7),
-        ('Diana Prince', 16, 11),
-        ('Eve Wilson', 14, 9),
-        ('Frank Miller', 13, 8),
-        ('Grace Lee', 17, 12),
-        ('Henry Davis', 15, 10)
-      """;
 
   private static final List<SqlNamedQuery> SAMPLE_QUERIES = List.of(
       SqlNamedQuery.builder()
@@ -83,12 +62,17 @@ public class StudentDataRepo {
         Statement stmt = conn.createStatement()) {
 
       stmt.execute("DROP TABLE IF EXISTS students");
-      stmt.execute(CREATE_TABLE);
-      stmt.execute(INSERT_INITIAL_DATA);
+
+      String createTableSQL = rootDataRepo.loadSqlFromFile("/sql/students-create.sql");
+      stmt.execute(createTableSQL);
+
+      String insertRecordsSQL = rootDataRepo.loadSqlFromFile("/sql/students-data.sql");
+      stmt.execute(insertRecordsSQL);
 
       System.out.println("✓ Student table created successfully!");
-    } catch (SQLException e) {
+    } catch (IOException | SQLException e) {
       System.err.println("Error creating student table: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 }

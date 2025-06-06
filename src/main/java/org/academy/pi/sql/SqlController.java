@@ -42,14 +42,15 @@ public class SqlController {
    */
   public void start() throws IOException {
     server = HttpServer.create(new InetSocketAddress(API_PORT), 0);
-    server.createContext("/", this::handleRoot);
-    server.createContext("/api/query", this::handleCustomQuery);
+    server.createContext("/sql/health", this::handleHealth);
+    server.createContext("/sql/query", this::handleCustomQuery);
     server.setExecutor(null);
     server.start();
 
     System.out.println("🌐 SQL Learning API started on http://localhost:" + API_PORT);
     System.out.println("📋 Available endpoints:");
-    System.out.println("   POST /api/query - Execute custom SQL query");
+    System.out.println("   GET  /sql/health ==> SQL Server Health");
+    System.out.println("   POST /sql/query  ==> SQL Custom Query");
   }
 
   /**
@@ -81,7 +82,7 @@ public class SqlController {
     return true;
   }
 
-  private void handleRoot(HttpExchange exchange) throws IOException {
+  private void handleHealth(HttpExchange exchange) throws IOException {
     if (!handleCors(exchange)) {
       return;
     }

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class SqlHealthResult {
 
   private boolean connected;
+  private String message;
   private List<SqlNamedQuery> sampleQueries;
   private List<String> tableNames;
 }
