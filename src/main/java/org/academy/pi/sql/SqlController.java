@@ -9,7 +9,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.academy.pi.sql.data.RootDataRepo;
+import org.academy.pi.sql.data.DataRepo;
 import org.academy.pi.sql.models.ApiResponse;
 import org.academy.pi.sql.models.ApiResponseType;
 import org.academy.pi.sql.models.SqlHealthResult;
@@ -24,13 +24,13 @@ public class SqlController {
   private static final int API_PORT = 8080;
 
   private final ObjectMapper objectMapper;
-  private final RootDataRepo rootDataRepo;
+  private final DataRepo rootDataRepo;
 
   private HttpServer server;
 
   public SqlController() {
     this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    this.rootDataRepo = new RootDataRepo();
+    this.rootDataRepo = new DataRepo();
   }
 
   protected Connection getConnection() throws SQLException {

@@ -1,13 +1,11 @@
 package org.academy.pi.sql.data;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 import org.academy.pi.sql.models.SqlNamedQuery;
 
-public class StudentDataRepo {
+@UtilityClass
+public class QueryRepo {
 
   private static final List<SqlNamedQuery> SAMPLE_QUERIES = List.of(
       SqlNamedQuery.builder()
@@ -67,44 +65,11 @@ public class StudentDataRepo {
           .build()
   );
 
-  private final RootDataRepo rootDataRepo;
-
-  public StudentDataRepo(final RootDataRepo rootDataRepo) {
-    this.rootDataRepo = rootDataRepo;
-    initializeTable();
-  }
-
-  public List<String> getTableNames() {
+  public static List<String> getTableNames() {
     return List.of("favorites", "students");
   }
 
-  public List<SqlNamedQuery> getSampleQueries() {
+  public static List<SqlNamedQuery> getSampleQueries() {
     return SAMPLE_QUERIES;
-  }
-
-  private void initializeTable() {
-    try (Connection conn = rootDataRepo.getConnection();
-        Statement stmt = conn.createStatement()) {
-
-      stmt.execute("DROP TABLE IF EXISTS favorites");
-      stmt.execute("DROP TABLE IF EXISTS students");
-
-      String createTable1SQL = rootDataRepo.loadSqlFromFile("/sql/students-create.sql");
-      stmt.execute(createTable1SQL);
-
-      String createTable2SQL = rootDataRepo.loadSqlFromFile("/sql/favorites-create.sql");
-      stmt.execute(createTable2SQL);
-
-      String insertRecords1SQL = rootDataRepo.loadSqlFromFile("/sql/students-data.sql");
-      stmt.execute(insertRecords1SQL);
-
-      String insertRecords2SQL = rootDataRepo.loadSqlFromFile("/sql/favorites-data.sql");
-      stmt.execute(insertRecords2SQL);
-
-      System.out.println("✓ Student table created successfully!");
-    } catch (IOException | SQLException e) {
-      System.err.println("Error creating student table: " + e.getMessage());
-      e.printStackTrace();
-    }
   }
 }

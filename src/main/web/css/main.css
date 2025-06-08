@@ -52,10 +52,16 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  /* Ensure main content doesn't exceed container bounds */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .query-section {
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .query-section h3 {
@@ -67,14 +73,14 @@ body {
 }
 
 .query-input {
-  width: 100%;
+  width: 96%;
   padding: 12px;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   font-family: 'Courier New', monospace;
   font-size: 14px;
   margin-bottom: 1rem;
-  min-height: 80px;
+  min-height: 160px;
   resize: vertical;
 }
 
@@ -89,11 +95,13 @@ body {
 .fancy-btn {
   color: white;
   border: none;
-  padding: 12px 24px;
+  margin: 4px;
+  padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
+  width: 240px;
 }
 
 .fancy-btn:hover {
@@ -105,8 +113,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
-  max-height: 600px;
+  min-height: 0; /* Important: allows flex child to shrink */
 }
 
 .results-header {
@@ -114,6 +121,7 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .performance-badge {
@@ -131,9 +139,13 @@ body {
   border-radius: 8px;
   padding: 1rem;
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: auto; /* Enable both horizontal and vertical scrolling */
   font-family: 'Courier New', monospace;
   font-size: 14px;
+  /* Use flex height but with constraints */
+  max-height: 400px;
+  max-width: 100%;
 }
 
 .sample-queries {
@@ -173,16 +185,21 @@ body {
   background: #fefefe;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
+  flex-shrink: 0; /* Prevent from shrinking */
 }
 
 .table-view {
-  overflow-x: auto;
+  /* Allow content to be larger than container for scrolling */
+  width: max-content;
+  min-width: 100%;
 }
 
 .table-view table {
-  width: 100%;
   border-collapse: collapse;
-  margin-top: 0.5rem;
+  margin: 0;
+  /* Allow table to expand naturally for horizontal scrolling */
+  width: max-content;
+  min-width: 100%;
 }
 
 .table-view th,
@@ -190,12 +207,18 @@ body {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
+  /* Prevent text wrapping to keep columns readable */
+  white-space: nowrap;
 }
 
 .table-view th {
-  background: #f8fafc;
-  font-weight: 600;
+  font-weight: 700;
   color: #475569;
+  position: sticky;
+  top: -16px;
+  z-index: 10;
+  background: #f8fafc;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
 }
 
 .status-indicator {

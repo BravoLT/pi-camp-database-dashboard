@@ -1,7 +1,9 @@
 package org.academy.pi.sql.data;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,27 +15,26 @@ import java.util.ArrayList;
 import java.util.List;
 import org.academy.pi.sql.models.SqlHealthResult;
 import org.academy.pi.sql.models.SqlQueryResult;
+import org.h2.tools.RunScript;
+import org.h2.tools.Server;
 
-public class RootDataRepo {
+public class DataRepo {
 
-  private static final String DB_URL = "jdbc:h2:~/sqllearning;AUTO_SERVER=TRUE";
+  private static final String DB_URL = "jdbc:h2:mem:sqllearning;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
   private static final String DB_USER = "student";
   private static final String DB_PASSWORD = "learn123";
 
-  private final StudentDataRepo studentDataRepo;
-
-  public RootDataRepo() {
+  public DataRepo() {
     initializeDatabase();
-    studentDataRepo = new StudentDataRepo(this);
   }
 
   public SqlHealthResult health() {
-    try (Connection _conn = getConnection()) {
+    try (Connection conn = getConnection()) {
       return SqlHealthResult.builder()
-          .connected(true)
+          .connected(conn != null)
           .message("Green means go!")
-          .sampleQueries(studentDataRepo.getSampleQueries())
-          .tableNames(studentDataRepo.getTableNames())
+          .sampleQueries(QueryRepo.getSampleQueries())
+          .tableNames(QueryRepo.getTableNames())
           .build();
     } catch (Exception e) {
       return SqlHealthResult.builder()
@@ -67,7 +68,7 @@ public class RootDataRepo {
           while (rs.next()) {
             List<Object> row = new ArrayList<>();
             for (int i = 1; i <= columnCount; i++) {
-              if("DATE".equals(metaData.getColumnTypeName(i))){
+              if ("DATE".equals(metaData.getColumnTypeName(i))) {
                 row.add(rs.getDate(i).toLocalDate().toString());
               } else {
                 row.add(rs.getObject(i));
@@ -109,39 +110,29 @@ public class RootDataRepo {
     }
   }
 
-  protected String loadSqlFromFile(String resourcePath) throws IOException {
-    try (InputStream inputStream = getClass().getResourceAsStream(resourcePath)) {
-      if (inputStream == null) {
-        throw new IOException("Resource not found: " + resourcePath);
-      }
-      return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-    }
-  }
-
-  /**
-   * Initialize the H2 database connection
-   */
   private void initializeDatabase() {
-    try {
-      // test connection
-      getConnection();
 
-      System.out.println("✓ Database connected successfully!");
-      System.out.println("✓ H2 Console available at: http://localhost:8082");
-      System.out.println("  - JDBC URL: " + DB_URL);
-      System.out.println("  - Username: " + DB_USER);
-      System.out.println("  - Password: " + DB_PASSWORD);
+    String initScript = "/sql/initialize-database.sql";
+
+    try (InputStream is = getClass().getResourceAsStream(initScript)) {
+      if (is == null) {
+        return;
+      }
+      try (
+          Connection conn = getConnection();
+          InputStreamReader isr = new InputStreamReader(is)
+      ) {
+        RunScript.execute(conn, isr);
+        Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
+        System.out.println("✓ Database initialize!");
+        System.out.println("✓ H2 Web Console available at: http://localhost:8082");
+        System.out.println("  - JDBC URL: " + DB_URL);
+        System.out.println("  - Username: " + DB_USER);
+        System.out.println("  - Password: " + DB_PASSWORD);
+      }
     } catch (Exception e) {
-      System.err.println("Error connecting to database: " + e.getMessage());
-      e.printStackTrace();
-    }
-
-    // Start H2 Console Server
-    try {
-      org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
-      System.out.println("✓ H2 Web Console started on port 8082");
-    } catch (SQLException e) {
-      System.err.println("Could not start H2 Console: " + e.getMessage());
+      System.err.println("initializeDatabase Error! " + e.getMessage());
+      throw new RuntimeException(e);
     }
   }
 }

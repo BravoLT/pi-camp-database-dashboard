@@ -15,8 +15,9 @@ public class SqlLearningApp {
    * Execute a SQL query and display results
    */
   public void executeQuery(String sql) {
-    try (Connection conn = sqlController.getConnection();
-        Statement stmt = conn.createStatement();
+    try (
+        Connection conn = sqlController.getConnection();
+        Statement stmt = conn.createStatement()
     ) {
       if (sql.trim().toUpperCase().startsWith("SELECT")) {
         // Execute SELECT query
